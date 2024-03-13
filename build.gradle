@@ -1,6 +1,6 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.2.3'
+	id 'org.springframework.boot' version '2.6.7'
 	id 'io.spring.dependency-management' version '1.1.4'
 }
 
@@ -22,12 +22,18 @@ repositories {
 }
 
 dependencies {
+	// jpa
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	// spring security
 	implementation 'org.springframework.boot:spring-boot-starter-security'
+	// spring web
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	// lombok
 	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly 'org.postgresql:postgresql'
 	annotationProcessor 'org.projectlombok:lombok'
+	// postgresql
+	runtimeOnly 'org.postgresql:postgresql'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 }
