@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  sns-database:
+    container_name: sns-database
+    build:
+      dockerfile: Dockerfile
+      context: ./database
+    image: upbreak/sns-database
+    environment:
+      - MARIADB_DATABASE=sns
+      - MARIADB_USER=${SPRING_DATASOURCE_USERNAME}
+      - MARIADB_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - MARIADB_ROOT_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+    volumes:
+      - ./database/config:/etc/mysql/conf.d
+    ports:
+      - "3306:3306"
