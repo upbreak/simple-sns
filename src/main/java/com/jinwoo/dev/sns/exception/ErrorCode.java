@@ -11,6 +11,7 @@ public enum ErrorCode {
     , INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error")
     , USER_NOT_FOUND(HttpStatus.NOT_FOUND, "User not found")
     , INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "Invalid password")
+    , INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "Invalid token")
     , TEMP(HttpStatus.NOT_FOUND, "temp");
 
     private HttpStatus status;
