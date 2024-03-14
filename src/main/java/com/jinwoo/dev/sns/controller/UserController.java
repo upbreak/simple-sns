@@ -1,8 +1,10 @@
 package com.jinwoo.dev.sns.controller;
 
 import com.jinwoo.dev.sns.controller.request.UserJoinRequest;
+import com.jinwoo.dev.sns.controller.request.UserLoginRequest;
 import com.jinwoo.dev.sns.controller.response.Response;
 import com.jinwoo.dev.sns.controller.response.UserJoinResponse;
+import com.jinwoo.dev.sns.controller.response.UserLoginResponse;
 import com.jinwoo.dev.sns.model.User;
 import com.jinwoo.dev.sns.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,12 @@ public class UserController {
         User user = userService.join(request.getUserName(), request.getPassword());
 
         return Response.success(UserJoinResponse.fromUser(user));
+    }
+
+    @PostMapping("/login")
+    public Response<UserLoginResponse> login(@RequestBody UserLoginRequest request){
+        String token = userService.login(request.getUserName(), request.getPassword());
+        return Response.success(new UserLoginResponse(token));
     }
 }
 
