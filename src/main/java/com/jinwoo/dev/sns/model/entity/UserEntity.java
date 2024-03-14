@@ -32,7 +32,7 @@ public class UserEntity {
 
     @Column(name = "role")
     @Enumerated(EnumType.STRING)
-    private UserRole role = UserRole.USER;
+    private UserRole role;
 
     @Column(name = "registered_at")
     private Timestamp registeredAt;
@@ -44,8 +44,9 @@ public class UserEntity {
     private Timestamp deletedAt;
 
     @PrePersist
-    void registeredAt() {
+    void defaultSet() {
         this.registeredAt = Timestamp.from(Instant.now());
+        this.role = this.role == null ? UserRole.USER : this.role;
     }
 
     @PreUpdate
