@@ -7,6 +7,8 @@ import com.jinwoo.dev.sns.controller.response.Response;
 import com.jinwoo.dev.sns.model.Post;
 import com.jinwoo.dev.sns.service.PostService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,5 +38,15 @@ public class PostController {
         postService.delete(postId, authentication.getName());
 
         return Response.success();
+    }
+
+    @GetMapping
+    public Response<Page<PostResponse>> list(Pageable pageable){
+        return Response.success(postService.list(pageable).map(PostResponse::fromPost));
+    }
+
+    @GetMapping("/my")
+    public Response<Page<PostResponse>> myList(Pageable pageable, Authentication authentication){
+        return Response.success(postService.myList(pageable, authentication.getName()).map(PostResponse::fromPost));
     }
 }
