@@ -15,6 +15,8 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 
@@ -175,4 +177,31 @@ public class PostServiceTest {
         SnsApplicationException e = Assertions.assertThrows(SnsApplicationException.class, () -> postService.delete(1, userName));
         Assertions.assertEquals(ErrorCode.INVALID_PERMISSION, e.getErrorCode());
     }
+
+    @Test
+    void 포스트목록() {
+        // Given
+        Pageable pageable = mock(Pageable.class);
+
+        // When
+        when(postEntityRepository.findAll(pageable)).thenReturn(Page.empty());
+
+        // Then
+        Assertions.assertDoesNotThrow(() -> postService.list(pageable));
+    }
+
+    @Test
+    void 내포스트목록() {
+        // Given
+        Pageable pageable = mock(Pageable.class);
+        UserEntity userEntity = UserEntityFixture.get("userName", "password");
+
+        // When
+        when(userEntityRepository.findByUserName(any())).thenReturn(Optional.of(userEntity));
+        when(postEntityRepository.findAllByUser(userEntity, pageable)).thenReturn(Page.empty());
+
+        // Then
+        Assertions.assertDoesNotThrow(() -> postService.myList(pageable, ""));
+    }
+
 }
