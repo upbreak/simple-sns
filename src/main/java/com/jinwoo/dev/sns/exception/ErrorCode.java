@@ -12,6 +12,8 @@ public enum ErrorCode {
     , USER_NOT_FOUND(HttpStatus.NOT_FOUND, "User not found")
     , INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "Invalid password")
     , INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "Invalid token")
+    , POST_NOT_FOUND(HttpStatus.NOT_FOUND, "Post not found")
+    , INVALID_PERMISSION(HttpStatus.UNAUTHORIZED, "Invalid permission")
     , TEMP(HttpStatus.NOT_FOUND, "temp");
 
     private HttpStatus status;

@@ -2,6 +2,7 @@ package com.jinwoo.dev.sns.service;
 
 import com.jinwoo.dev.sns.exception.ErrorCode;
 import com.jinwoo.dev.sns.exception.SnsApplicationException;
+import com.jinwoo.dev.sns.model.Post;
 import com.jinwoo.dev.sns.model.entity.PostEntity;
 import com.jinwoo.dev.sns.model.entity.UserEntity;
 import com.jinwoo.dev.sns.repository.PostEntityRepository;
@@ -28,5 +29,26 @@ public class PostService {
         //post save
         postEntityRepository.save(PostEntity.of(title, body, userEntity));
 
+    }
+
+    @Transactional
+    public Post modify(Integer postId, String title, String body, String userName){
+        //user find
+        UserEntity userEntity = userEntityRepository.findByUserName(userName)
+                .orElseThrow(() -> new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not found", userName)));
+
+        //post exist
+        PostEntity postEntity = postEntityRepository.findById(postId)
+                .orElseThrow(() -> new SnsApplicationException(ErrorCode.POST_NOT_FOUND, String.format("%s not found", postId)));
+
+        //post permission
+        if(postEntity.getUser().getId() != userEntity.getId()){
+            throw new SnsApplicationException(ErrorCode.INVALID_PERMISSION, String.format("%s has not permission", userEntity.getUserName()));
+        }
+
+        postEntity.setTitle(title);
+        postEntity.setBody(body);
+
+        return Post.fromEntity(postEntityRepository.saveAndFlush(postEntity));
     }
 }
