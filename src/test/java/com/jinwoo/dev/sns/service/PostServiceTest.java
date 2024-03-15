@@ -122,4 +122,57 @@ public class PostServiceTest {
         SnsApplicationException e = Assertions.assertThrows(SnsApplicationException.class, () -> postService.modify(postId, title, body, userName));
         Assertions.assertEquals(ErrorCode.INVALID_PERMISSION, e.getErrorCode());
     }
+
+    @Test
+    void 포스트삭제_성공() {
+        // Given
+        String userName = "userName";
+        Integer postId = 1;
+
+        PostEntity postEntity = PostEntityFixture.get(postId, userName);
+        UserEntity userEntity = postEntity.getUser();
+
+        // When
+        when(userEntityRepository.findByUserName(userName)).thenReturn(Optional.of(userEntity));
+        when(postEntityRepository.findById(postId)).thenReturn(Optional.of(postEntity));
+
+        // Then
+        Assertions.assertDoesNotThrow(() -> postService.delete(1, userName));
+    }
+
+    @Test
+    void 포스트삭제_포스트가_존재하지_않는_경우() {
+        // Given
+        String userName = "userName";
+        Integer postId = 1;
+
+        PostEntity postEntity = PostEntityFixture.get(postId, userName);
+        UserEntity userEntity = postEntity.getUser();
+
+        // When
+        when(userEntityRepository.findByUserName(userName)).thenReturn(Optional.of(userEntity));
+        when(postEntityRepository.findById(postId)).thenReturn(Optional.empty());
+
+        // Then
+        SnsApplicationException e = Assertions.assertThrows(SnsApplicationException.class, () -> postService.delete(1, userName));
+        Assertions.assertEquals(ErrorCode.POST_NOT_FOUND, e.getErrorCode());
+    }
+
+    @Test
+    void 포스트삭제_권한이_없는_경우() {
+        // Given
+        String userName = "userName";
+        Integer postId = 1;
+
+        PostEntity postEntity = PostEntityFixture.get(postId, userName);
+        UserEntity userEntity = UserEntityFixture.get(2,"userName1", "password");
+
+        // When
+        when(userEntityRepository.findByUserName(userName)).thenReturn(Optional.of(userEntity));
+        when(postEntityRepository.findById(postId)).thenReturn(Optional.of(postEntity));
+
+        // Then
+        SnsApplicationException e = Assertions.assertThrows(SnsApplicationException.class, () -> postService.delete(1, userName));
+        Assertions.assertEquals(ErrorCode.INVALID_PERMISSION, e.getErrorCode());
+    }
 }
