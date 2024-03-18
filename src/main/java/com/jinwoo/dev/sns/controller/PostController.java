@@ -1,10 +1,11 @@
 package com.jinwoo.dev.sns.controller;
 
+import com.jinwoo.dev.sns.controller.request.CommentRequest;
 import com.jinwoo.dev.sns.controller.request.PostCreateRequest;
 import com.jinwoo.dev.sns.controller.request.PostModifyRequest;
+import com.jinwoo.dev.sns.controller.response.CommentResponse;
 import com.jinwoo.dev.sns.controller.response.PostResponse;
 import com.jinwoo.dev.sns.controller.response.Response;
-import com.jinwoo.dev.sns.model.Post;
 import com.jinwoo.dev.sns.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -61,5 +62,19 @@ public class PostController {
     public Response<Integer> likeCount(@PathVariable Integer postId){
 
         return Response.success(postService.likeCount(postId));
+    }
+
+    @PostMapping("/{postId}/comments")
+    public Response<Void> comments(@PathVariable Integer postId, Authentication authentication, @RequestBody CommentRequest request){
+        postService.comment(postId, authentication.getName(), request.getComment());
+
+        return Response.success();
+    }
+
+    @GetMapping("/{postId}/comments")
+    public Response<Page<CommentResponse>> comments(@PathVariable Integer postId, Pageable pageable){
+        Page<CommentResponse> commentResponses = postService.getComments(postId, pageable).map(CommentResponse::fromComment);
+
+        return Response.success(commentResponses);
     }
 }
