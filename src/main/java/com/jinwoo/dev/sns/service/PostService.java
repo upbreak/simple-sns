@@ -2,16 +2,12 @@ package com.jinwoo.dev.sns.service;
 
 import com.jinwoo.dev.sns.exception.ErrorCode;
 import com.jinwoo.dev.sns.exception.SnsApplicationException;
+import com.jinwoo.dev.sns.model.AlarmArgs;
+import com.jinwoo.dev.sns.model.AlarmType;
 import com.jinwoo.dev.sns.model.Comment;
 import com.jinwoo.dev.sns.model.Post;
-import com.jinwoo.dev.sns.model.entity.CommentEntity;
-import com.jinwoo.dev.sns.model.entity.LikeEntity;
-import com.jinwoo.dev.sns.model.entity.PostEntity;
-import com.jinwoo.dev.sns.model.entity.UserEntity;
-import com.jinwoo.dev.sns.repository.CommentEntityRepository;
-import com.jinwoo.dev.sns.repository.LikeEntityRepository;
-import com.jinwoo.dev.sns.repository.PostEntityRepository;
-import com.jinwoo.dev.sns.repository.UserEntityRepository;
+import com.jinwoo.dev.sns.model.entity.*;
+import com.jinwoo.dev.sns.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -31,6 +27,7 @@ public class PostService {
     private final UserEntityRepository userEntityRepository;
     private final LikeEntityRepository likeEntityRepository;
     private final CommentEntityRepository commentEntityRepository;
+    private final AlarmRepository alarmRepository;
 
     @Transactional
     public void create(String title, String body, String userName){
@@ -99,6 +96,15 @@ public class PostService {
         //save
         likeEntityRepository.save(LikeEntity.of(userEntity, postEntity));
 
+        alarmRepository.save(AlarmEntity.builder()
+                                        .user(postEntity.getUser())
+                                        .alarmType(AlarmType.NEW_LIKE_ON_POST)
+                                        .args(AlarmArgs.builder()
+                                                        .fromUserId(userEntity.getId())
+                                                        .targetId(postEntity.getId())
+                                                        .build())
+                                        .build());
+
     }
 
     public int likeCount(Integer postId) {
@@ -117,6 +123,15 @@ public class PostService {
         PostEntity postEntity = getPostEntityOrException(postId);
 
         commentEntityRepository.save(CommentEntity.of(userEntity, postEntity, comment));
+
+        alarmRepository.save(AlarmEntity.builder()
+                                        .user(postEntity.getUser())
+                                        .alarmType(AlarmType.NEW_COMMENT_ON_POST)
+                                        .args(AlarmArgs.builder()
+                                                        .fromUserId(userEntity.getId())
+                                                        .targetId(postEntity.getId())
+                                                        .build())
+                                        .build());
     }
 
     public Page<Comment> getComments(Integer postId, Pageable pageable) {

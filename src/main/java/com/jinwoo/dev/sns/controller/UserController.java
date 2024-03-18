@@ -2,16 +2,17 @@ package com.jinwoo.dev.sns.controller;
 
 import com.jinwoo.dev.sns.controller.request.UserJoinRequest;
 import com.jinwoo.dev.sns.controller.request.UserLoginRequest;
+import com.jinwoo.dev.sns.controller.response.AlarmResponse;
 import com.jinwoo.dev.sns.controller.response.Response;
 import com.jinwoo.dev.sns.controller.response.UserJoinResponse;
 import com.jinwoo.dev.sns.controller.response.UserLoginResponse;
 import com.jinwoo.dev.sns.model.User;
 import com.jinwoo.dev.sns.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
@@ -31,6 +32,13 @@ public class UserController {
     public Response<UserLoginResponse> login(@RequestBody UserLoginRequest request){
         String token = userService.login(request.getName(), request.getPassword());
         return Response.success(new UserLoginResponse(token));
+    }
+
+    @GetMapping("/alarm")
+    public Response<Page<AlarmResponse>> alarm(Pageable pageable, Authentication authentication){
+        Page<AlarmResponse> alarmResponses = userService.alarmList(authentication.getName(), pageable).map(AlarmResponse::fromAlarm);
+
+        return Response.success(alarmResponses);
     }
 }
 
