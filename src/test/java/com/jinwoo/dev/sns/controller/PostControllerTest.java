@@ -1,17 +1,15 @@
 package com.jinwoo.dev.sns.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jinwoo.dev.sns.controller.request.CommentRequest;
 import com.jinwoo.dev.sns.controller.request.PostCreateRequest;
 import com.jinwoo.dev.sns.controller.request.PostModifyRequest;
-import com.jinwoo.dev.sns.controller.request.UserJoinRequest;
 import com.jinwoo.dev.sns.exception.ErrorCode;
 import com.jinwoo.dev.sns.exception.SnsApplicationException;
 import com.jinwoo.dev.sns.fixture.PostEntityFixture;
 import com.jinwoo.dev.sns.model.Post;
 import com.jinwoo.dev.sns.service.PostService;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -241,6 +239,40 @@ public class PostControllerTest {
 
         mockMvc.perform(post("/api/v1/posts/1/likes")
                         .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser
+    void 댓글기능() throws Exception {
+        mockMvc.perform(post("/api/v1/posts/1/comments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(new CommentRequest("comment")))
+                ).andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isOk());
+    }
+
+
+    @Test
+    @WithAnonymousUser
+    void 댓글기능_로그인하지_않은_경우() throws Exception {
+
+        mockMvc.perform(post("/api/v1/posts/1/comments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(new CommentRequest("comment")))
+                ).andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser
+    void 댓글기능_게시물이_없는_경우() throws Exception {
+        doThrow(new SnsApplicationException(ErrorCode.POST_NOT_FOUND)).when(postService).comment(any(), any(), any());
+
+        mockMvc.perform(post("/api/v1/posts/1/comments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(new CommentRequest("comment")))
                 ).andDo(MockMvcResultHandlers.print())
                 .andExpect(status().isNotFound());
     }
