@@ -1,5 +1,6 @@
 package com.jinwoo.dev.sns.model.entity;
 
+import com.jinwoo.dev.sns.model.User;
 import com.jinwoo.dev.sns.model.UserRole;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -56,6 +57,17 @@ public class UserEntity {
 
     public static UserEntity of(String userName, String password){
         return UserEntity.builder().userName(userName).password(password).build();
+    }
+
+    public static UserEntity fromUser(User user){
+        return UserEntity.builder()
+                .id(user.getId())
+                .userName(user.getUsername())
+                .role(user.getUserRole())
+                .registeredAt(user.getRegisteredAt())
+                .updatedAt(user.getUpdatedAt())
+                .deletedAt(user.getDeletedAt())
+                .build();
     }
 
 }

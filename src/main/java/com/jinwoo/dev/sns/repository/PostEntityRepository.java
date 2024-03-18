@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PostEntityRepository extends JpaRepository<PostEntity, Integer> {
 
-    Page<PostEntity> findAllByUser(UserEntity entity, Pageable pageable);
+    Page<PostEntity> findAllByUserId(Integer userId, Pageable pageable);
 }

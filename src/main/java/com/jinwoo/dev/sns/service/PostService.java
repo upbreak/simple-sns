@@ -2,10 +2,7 @@ package com.jinwoo.dev.sns.service;
 
 import com.jinwoo.dev.sns.exception.ErrorCode;
 import com.jinwoo.dev.sns.exception.SnsApplicationException;
-import com.jinwoo.dev.sns.model.AlarmArgs;
-import com.jinwoo.dev.sns.model.AlarmType;
-import com.jinwoo.dev.sns.model.Comment;
-import com.jinwoo.dev.sns.model.Post;
+import com.jinwoo.dev.sns.model.*;
 import com.jinwoo.dev.sns.model.entity.*;
 import com.jinwoo.dev.sns.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -30,25 +27,20 @@ public class PostService {
     private final AlarmRepository alarmRepository;
 
     @Transactional
-    public void create(String title, String body, String userName){
-        //user find
-        UserEntity userEntity = getUserEntityOrException(userName);
+    public void create(String title, String body, User user){
 
         //post save
-        postEntityRepository.save(PostEntity.of(title, body, userEntity));
+        postEntityRepository.save(PostEntity.of(title, body, UserEntity.fromUser(user)));
 
     }
 
     @Transactional
-    public Post modify(Integer postId, String title, String body, String userName){
-        //user find
-        UserEntity userEntity = getUserEntityOrException(userName);
-
+    public Post modify(Integer postId, String title, String body, User user){
         //post exist
         PostEntity postEntity = getPostEntityOrException(postId);
 
         //post permission
-        postPermissionCheck(userEntity, postEntity);
+        postPermissionCheck(user, postEntity);
 
         postEntity.setTitle(title);
         postEntity.setBody(body);
@@ -56,15 +48,12 @@ public class PostService {
         return Post.fromEntity(postEntityRepository.saveAndFlush(postEntity));
     }
 
-    public void delete(Integer postId, String userName){
-        //user find
-        UserEntity userEntity = getUserEntityOrException(userName);
-
+    public void delete(Integer postId, User user){
         //post exist
         PostEntity postEntity = getPostEntityOrException(postId);
 
         //post permission
-        postPermissionCheck(userEntity, postEntity);
+        postPermissionCheck(user, postEntity);
 
         postEntityRepository.delete(postEntity);
     }
@@ -73,41 +62,36 @@ public class PostService {
         return postEntityRepository.findAll(pageable).map(Post::fromEntity);
     }
 
-    public Page<Post> myList(Pageable pageable, String userName){
-        //user find
-        UserEntity userEntity = getUserEntityOrException(userName);
+    public Page<Post> myList(Pageable pageable, Integer userId){
 
-        return postEntityRepository.findAllByUser(userEntity, pageable).map(Post::fromEntity);
+        return postEntityRepository.findAllByUserId(userId, pageable).map(Post::fromEntity);
     }
 
     @Transactional
-    public void like(Integer postId, String userName) {
-        //user find
-        UserEntity userEntity = getUserEntityOrException(userName);
-
+    public void like(Integer postId, User user) {
         //post exist
         PostEntity postEntity = getPostEntityOrException(postId);
 
         //checked like
-        likeEntityRepository.findByUserAndPost(userEntity, postEntity).ifPresent(it -> {
-            throw new SnsApplicationException(ErrorCode.ALREADY_LIKED, String.format("userName %s already post %d", userName, postId));
+        likeEntityRepository.findByUserIdAndPostId(user.getId(), postId).ifPresent(it -> {
+            throw new SnsApplicationException(ErrorCode.ALREADY_LIKED, String.format("userId %d already postId %d", user.getId(), postId));
         });
 
         //save
-        likeEntityRepository.save(LikeEntity.of(userEntity, postEntity));
+        likeEntityRepository.save(LikeEntity.of(UserEntity.fromUser(user), postEntity));
 
         alarmRepository.save(AlarmEntity.builder()
                                         .user(postEntity.getUser())
                                         .alarmType(AlarmType.NEW_LIKE_ON_POST)
                                         .args(AlarmArgs.builder()
-                                                        .fromUserId(userEntity.getId())
+                                                        .fromUserId(user.getId())
                                                         .targetId(postEntity.getId())
                                                         .build())
                                         .build());
 
     }
 
-    public int likeCount(Integer postId) {
+    public long likeCount(Integer postId) {
         //post exist
         PostEntity postEntity = getPostEntityOrException(postId);
 
@@ -115,20 +99,18 @@ public class PostService {
     }
 
     @Transactional
-    public void comment(Integer postId, String userName, String comment){
-        //user find
-        UserEntity userEntity = getUserEntityOrException(userName);
+    public void comment(Integer postId, User user, String comment){
 
         //post exist
         PostEntity postEntity = getPostEntityOrException(postId);
 
-        commentEntityRepository.save(CommentEntity.of(userEntity, postEntity, comment));
+        commentEntityRepository.save(CommentEntity.of(UserEntity.fromUser(user), postEntity, comment));
 
         alarmRepository.save(AlarmEntity.builder()
                                         .user(postEntity.getUser())
                                         .alarmType(AlarmType.NEW_COMMENT_ON_POST)
                                         .args(AlarmArgs.builder()
-                                                        .fromUserId(userEntity.getId())
+                                                        .fromUserId(user.getId())
                                                         .targetId(postEntity.getId())
                                                         .build())
                                         .build());
@@ -147,15 +129,9 @@ public class PostService {
                 .orElseThrow(() -> new SnsApplicationException(ErrorCode.POST_NOT_FOUND, String.format("%s not found", postId)));
     }
 
-    private UserEntity getUserEntityOrException(String userName){
-        //user find
-        return userEntityRepository.findByUserName(userName)
-                .orElseThrow(() -> new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not found", userName)));
-    }
-
-    private void postPermissionCheck(UserEntity userEntity, PostEntity postEntity){
-        if(postEntity.getUser().getId() != userEntity.getId()){
-            throw new SnsApplicationException(ErrorCode.INVALID_PERMISSION, String.format("%s has not permission", userEntity.getUserName()));
+    private void postPermissionCheck(User user, PostEntity postEntity){
+        if(postEntity.getUser().getId() != user.getId()){
+            throw new SnsApplicationException(ErrorCode.INVALID_PERMISSION, String.format("%s has not permission", user.getUsername()));
         }
     }
 }

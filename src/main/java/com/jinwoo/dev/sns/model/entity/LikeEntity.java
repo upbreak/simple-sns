@@ -14,7 +14,10 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "\"like\"")
+@Table(name = "\"like\"", indexes = {
+        @Index(name = "user_id_idx", columnList = "user_id")
+        , @Index(name = "post_id_idx", columnList = "post_id")
+})
 @SQLDelete(sql = "UPDATE like SET deleted_at = now() where id=?")
 @Where(clause = "deleted_at is NULL")
 public class LikeEntity {

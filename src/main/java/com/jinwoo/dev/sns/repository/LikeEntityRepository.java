@@ -11,9 +11,8 @@ import java.util.Optional;
 
 public interface LikeEntityRepository extends JpaRepository<LikeEntity, Integer> {
 
-    Optional<LikeEntity> findByUserAndPost(UserEntity user, PostEntity post);
+    Optional<LikeEntity> findByUserIdAndPostId(Integer userId, Integer postId);
 
-    @Query(value = "SELECT COUNT(*) FROM LikeEntity entity WHERE entity.post = :post")
-    Integer countByPost(PostEntity post);
+    long countByPost(PostEntity post);
 
 }

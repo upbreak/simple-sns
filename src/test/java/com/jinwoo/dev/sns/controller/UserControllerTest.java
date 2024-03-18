@@ -6,7 +6,9 @@ import com.jinwoo.dev.sns.controller.request.UserJoinRequest;
 import com.jinwoo.dev.sns.controller.request.UserLoginRequest;
 import com.jinwoo.dev.sns.exception.ErrorCode;
 import com.jinwoo.dev.sns.exception.SnsApplicationException;
+import com.jinwoo.dev.sns.fixture.UserEntityFixture;
 import com.jinwoo.dev.sns.model.User;
+import com.jinwoo.dev.sns.model.entity.UserEntity;
 import com.jinwoo.dev.sns.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -115,8 +117,7 @@ public class UserControllerTest {
         when(userService.alarmList(any(), any())).thenReturn(Page.empty());
         mockMvc.perform(get("/api/v1/users/alarm")
                         .contentType(MediaType.APPLICATION_JSON)
-                )
-                .andDo(print())
+                ).andDo(print())
                 .andExpect(status().isOk());
     }
 
