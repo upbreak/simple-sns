@@ -55,6 +55,8 @@ public class PostService {
         //post permission
         postPermissionCheck(user, postEntity);
 
+        likeEntityRepository.deleteAllByPost(postEntity);
+        commentEntityRepository.deleteAllByPost(postEntity);
         postEntityRepository.delete(postEntity);
     }
 
