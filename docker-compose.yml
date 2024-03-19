@@ -16,3 +16,11 @@ services:
       - ./database/config:/etc/mysql/conf.d
     ports:
       - "3306:3306"
+  sns-redis:
+    container_name: sns-redis
+    build:
+      dockerfile: Dockerfile
+      context: ./redis
+    image: upbreak/sns-redis
+    ports:
+      - "6379:6379"
