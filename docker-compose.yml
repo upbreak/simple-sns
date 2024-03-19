@@ -24,3 +24,30 @@ services:
     image: upbreak/sns-redis
     ports:
       - "6379:6379"
+  sns-zookeeper:
+    hostname: zookeeper
+    container_name: sns-zookeeper
+    image: wurstmeister/zookeeper:3.4.6
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+    ports:
+      - "22181:2181"
+  sns-kafka:
+    hostname: kafka
+    container_name: sns-kafka
+    image: wurstmeister/kafka:2.13-2.8.1
+    depends_on:
+      - sns-zookeeper
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_HOST_NAME: 127.0.0.1
+      KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_ZOOKEEPER_CONNECT: sns-zookeeper:2181
+#      KAFKA_CREATE_TOPICS: "test:1:1"
+    ports:
+      - "9092:9092"
