@@ -4,6 +4,8 @@ import com.jinwoo.dev.sns.exception.ErrorCode;
 import com.jinwoo.dev.sns.exception.SnsApplicationException;
 import com.jinwoo.dev.sns.model.*;
 import com.jinwoo.dev.sns.model.entity.*;
+import com.jinwoo.dev.sns.model.event.AlarmEvent;
+import com.jinwoo.dev.sns.producer.AlarmProducer;
 import com.jinwoo.dev.sns.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,7 @@ public class PostService {
     private final CommentEntityRepository commentEntityRepository;
     private final AlarmRepository alarmRepository;
     private final AlarmService alarmService;
+    private final AlarmProducer alarmProducer;
 
     @Transactional
     public void create(String title, String body, User user){
@@ -83,16 +86,13 @@ public class PostService {
         //save
         likeEntityRepository.save(LikeEntity.of(UserEntity.fromUser(user), postEntity));
 
-        AlarmEntity alarmEntity = alarmRepository.save(AlarmEntity.builder()
-                .user(postEntity.getUser())
-                .alarmType(AlarmType.NEW_LIKE_ON_POST)
-                .args(AlarmArgs.builder()
-                        .fromUserId(user.getId())
-                        .targetId(postEntity.getId())
-                        .build())
-                .build());
-
-        alarmService.send(alarmEntity.getId(), postEntity.getUser().getId());
+        alarmProducer.send(
+                new AlarmEvent(
+                        postEntity.getUser().getId()
+                        , AlarmType.NEW_LIKE_ON_POST
+                        , AlarmArgs.builder().fromUserId(user.getId()).targetId(postEntity.getId()).build()
+                )
+        );
     }
 
     public long likeCount(Integer postId) {
@@ -108,18 +108,17 @@ public class PostService {
         //post exist
         PostEntity postEntity = getPostEntityOrException(postId);
 
+        //comment save
         commentEntityRepository.save(CommentEntity.of(UserEntity.fromUser(user), postEntity, comment));
 
-        AlarmEntity alarmEntity = alarmRepository.save(AlarmEntity.builder()
-                .user(postEntity.getUser())
-                .alarmType(AlarmType.NEW_COMMENT_ON_POST)
-                .args(AlarmArgs.builder()
-                        .fromUserId(user.getId())
-                        .targetId(postEntity.getId())
-                        .build())
-                .build());
-
-        alarmService.send(alarmEntity.getId(), postEntity.getUser().getId());
+        // kafka message send
+        alarmProducer.send(
+                new AlarmEvent(
+                        postEntity.getUser().getId()
+                        , AlarmType.NEW_COMMENT_ON_POST
+                        , AlarmArgs.builder().targetId(postEntity.getId()).fromUserId(user.getId()).build()
+                )
+        );
     }
 
     public Page<Comment> getComments(Integer postId, Pageable pageable) {
