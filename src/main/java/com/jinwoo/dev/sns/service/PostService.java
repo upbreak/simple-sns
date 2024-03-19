@@ -25,6 +25,7 @@ public class PostService {
     private final LikeEntityRepository likeEntityRepository;
     private final CommentEntityRepository commentEntityRepository;
     private final AlarmRepository alarmRepository;
+    private final AlarmService alarmService;
 
     @Transactional
     public void create(String title, String body, User user){
@@ -82,15 +83,16 @@ public class PostService {
         //save
         likeEntityRepository.save(LikeEntity.of(UserEntity.fromUser(user), postEntity));
 
-        alarmRepository.save(AlarmEntity.builder()
-                                        .user(postEntity.getUser())
-                                        .alarmType(AlarmType.NEW_LIKE_ON_POST)
-                                        .args(AlarmArgs.builder()
-                                                        .fromUserId(user.getId())
-                                                        .targetId(postEntity.getId())
-                                                        .build())
-                                        .build());
+        AlarmEntity alarmEntity = alarmRepository.save(AlarmEntity.builder()
+                .user(postEntity.getUser())
+                .alarmType(AlarmType.NEW_LIKE_ON_POST)
+                .args(AlarmArgs.builder()
+                        .fromUserId(user.getId())
+                        .targetId(postEntity.getId())
+                        .build())
+                .build());
 
+        alarmService.send(alarmEntity.getId(), postEntity.getUser().getId());
     }
 
     public long likeCount(Integer postId) {
@@ -108,14 +110,16 @@ public class PostService {
 
         commentEntityRepository.save(CommentEntity.of(UserEntity.fromUser(user), postEntity, comment));
 
-        alarmRepository.save(AlarmEntity.builder()
-                                        .user(postEntity.getUser())
-                                        .alarmType(AlarmType.NEW_COMMENT_ON_POST)
-                                        .args(AlarmArgs.builder()
-                                                        .fromUserId(user.getId())
-                                                        .targetId(postEntity.getId())
-                                                        .build())
-                                        .build());
+        AlarmEntity alarmEntity = alarmRepository.save(AlarmEntity.builder()
+                .user(postEntity.getUser())
+                .alarmType(AlarmType.NEW_COMMENT_ON_POST)
+                .args(AlarmArgs.builder()
+                        .fromUserId(user.getId())
+                        .targetId(postEntity.getId())
+                        .build())
+                .build());
+
+        alarmService.send(alarmEntity.getId(), postEntity.getUser().getId());
     }
 
     public Page<Comment> getComments(Integer postId, Pageable pageable) {
