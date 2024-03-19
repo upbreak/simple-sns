@@ -6,6 +6,7 @@ import com.jinwoo.dev.sns.model.Alarm;
 import com.jinwoo.dev.sns.model.User;
 import com.jinwoo.dev.sns.model.entity.UserEntity;
 import com.jinwoo.dev.sns.repository.AlarmRepository;
+import com.jinwoo.dev.sns.repository.UserCacheRepository;
 import com.jinwoo.dev.sns.repository.UserEntityRepository;
 import com.jinwoo.dev.sns.util.JwtTokenUtils;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class UserService {
     private final UserEntityRepository userEntityRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final AlarmRepository alarmRepository;
+    private final UserCacheRepository userCacheRepository;
 
     @Value("${jwt.secret-key}")
     private String secretKey;
@@ -49,11 +51,11 @@ public class UserService {
 
     public String login(String userName, String password){
         //회원가입 여부 체크
-        UserEntity userEntity = userEntityRepository.findByUserName(userName)
-                .orElseThrow(() -> new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not found", userName)));
+        User user = loadUserByUserName(userName);
+        userCacheRepository.setUser(user);
 
         //비밀번호 체크
-        if(!passwordEncoder.matches(password, userEntity.getPassword())){
+        if(!passwordEncoder.matches(password, user.getPassword())){
             throw new SnsApplicationException(ErrorCode.INVALID_PASSWORD);
         }
 
@@ -64,8 +66,10 @@ public class UserService {
     }
 
     public User loadUserByUserName(String userName){
-        return userEntityRepository.findByUserName(userName).map(User::fromEntity)
-                .orElseThrow(() -> new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not found", userName)));
+        return userCacheRepository.getUser(userName).orElseGet(() ->
+            userEntityRepository.findByUserName(userName).map(User::fromEntity)
+                    .orElseThrow(() -> new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not found", userName)))
+        );
     }
 
     public Page<Alarm> alarmList(Integer userId, Pageable pageable) {
